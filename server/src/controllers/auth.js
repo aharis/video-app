@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 
 import User from "../models/user.js";
 import { errorHandler } from "../utils/errorHandling.js";
+import { errorMiddleware } from "../middlewares/errorMidlleware.js";
 
 export const signup = async (req, res, next) => {
   try {
@@ -36,27 +37,27 @@ export const signin = async (req, res, next) => {
     const user = await User.findOne({ email });
 
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return next(errorMiddleware(404, "User not found"));
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (!isPasswordValid) {
-      return res.status(401).json({ message: "Invalid password" });
+      return next(errorMiddleware(400, "Wrong credentials"));
     }
 
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
       expiresIn: "1h",
     });
 
-    const { password: userPassword, ...loggedUser } = user.toObject();
+    const { password: userPassword, ...others } = user._doc;
 
-    return res
+    res
       .cookie("access_token", token, {
         httpOnly: true,
       })
       .status(200)
-      .json({ message: "User signed in successfully", user: loggedUser, token });
+      .json(others); // Sending only user data without password
   } catch (error) {
     next(errorHandler(500, error.message));
   }

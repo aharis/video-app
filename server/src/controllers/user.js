@@ -5,8 +5,15 @@ import { status } from "../utils/statuses.js";
 const getUsers = async (req, res, next) => {
   try {
     const allUsers = await User.find();
-    const message = allUsers.length === 0 ? "No users in base" : "All users";
-    return res.status(200).json({ message, users: allUsers });
+
+    let message = allUsers.length > 0 ? "All users" : "No users in base";
+
+    const users = allUsers.map((user) => {
+      const { password, ...userWithoutPassword } = user.toObject();
+      return userWithoutPassword;
+    });
+
+    return res.status(200).json({ message, users });
   } catch (error) {
     return next(errorHandler(500, error.message));
   }
@@ -22,27 +29,30 @@ const getUser = async (req, res, next) => {
         .status(status.notFound)
         .json({ message: "No user with this ID" });
     }
+    const { password: userPassword, ...others } = user._doc;
 
-    return res.status(status.success).json({ message: "User found", user });
+    return res.status(status.success).json({ message: "User found", others });
   } catch (error) {
     return next(errorHandler(500, error.message));
   }
 };
 
 const updateUser = async (req, res, next) => {
-  const id = req.params.id;
   try {
-    const updateUser = await User.findByIdAndUpdate(id, req.body, {
+    const id = req.body._id; // Assuming userId is provided in the request body
+    const userId = req.params.id;
+    if (id !== userId)
+      return next(errorHandler(401, "You can edit only your profile!"));
+    const updatedUser = await User.findByIdAndUpdate(id, req.body, {
       new: true,
     });
-
-    if (!updateUser) {
-      return res.status(status.notFound).json({ message: "User not found" });
+    if (!updatedUser) {
+      return next(errorHandler(status.notFound, "Invalid data"));
     }
 
     return res
       .status(status.success)
-      .json({ message: "User successfully updated", updateUser });
+      .json({ message: "User successfully updated", updatedUser });
   } catch (error) {
     next(errorHandler(404, error.message));
   }
@@ -50,7 +60,6 @@ const updateUser = async (req, res, next) => {
 
 const deleteUser = async (req, res, next) => {
   const id = req.params.id;
-  //if you wount delete only your account you can use the following line code if(req.params.id === req.body.id){then trycatch block of code}
   try {
     const deletedUser = await User.findByIdAndDelete(id);
 
@@ -71,7 +80,7 @@ const deleteUser = async (req, res, next) => {
 const subscribe = async (req, res, next) => {
   const userId = req.user.id;
   const targetUserId = req.params.id;
-  
+
   try {
     // Dodavanje korisnika u listu pretplaćenih korisnika
     await User.findByIdAndUpdate(userId, {
@@ -84,7 +93,9 @@ const subscribe = async (req, res, next) => {
     });
 
     // Uspješna pretplata
-    return res.status(status.success).json({ message: "Subscription Successful" });
+    return res
+      .status(status.success)
+      .json({ message: "Subscription Successful" });
   } catch (error) {
     // Greška u pretplati
     return next(errorHandler(500, error.message));
@@ -94,7 +105,7 @@ const subscribe = async (req, res, next) => {
 const unSubscribe = async (req, res, next) => {
   const userId = req.user.id;
   const targetUserId = req.params.id;
-  
+
   try {
     // Dodavanje korisnika u listu pretplaćenih korisnika
     await User.findByIdAndUpdate(userId, {
@@ -107,14 +118,25 @@ const unSubscribe = async (req, res, next) => {
     });
 
     // Uspješna pretplata
-    return res.status(status.success).json({ message: "Unsubscription Successful" });
+    return res
+      .status(status.success)
+      .json({ message: "Unsubscription Successful" });
   } catch (error) {
     // Greška u pretplati
     return next(errorHandler(500, error.message));
   }
 };
 
-const like = async() => {}
-const unLike = async() => {}
+const like = async () => {};
+const unLike = async () => {};
 
-export { getUsers, getUser, updateUser, deleteUser, subscribe, unSubscribe, like, unLike };
+export {
+  getUsers,
+  getUser,
+  updateUser,
+  deleteUser,
+  subscribe,
+  unSubscribe,
+  like,
+  unLike,
+};
