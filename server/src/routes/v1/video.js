@@ -8,16 +8,17 @@ import {
   getVideo,
   subscribe,
   updateVideo,
-} from "../../controllers/video.js"; // Assuming 'video.js' is located in the 'controllers' directory
+} from "../../controllers/video.js";
 import { verifyToken } from "../../middlewares/verifyToken.js";
 
 const router = Router();
 
-router.post("/video", verifyToken, createVideo);
+router.post("/video", createVideo);
 router.put("/video/:id", verifyToken, updateVideo);
 router.delete("/video/:id", verifyToken, deleteVideo);
-router.get("/video/id", getVideo);
-router.get("/trend/:id", getTrends);
+router.get("/video/:id", getVideo);
+router.get("/trend", getTrends);
 router.get("/videoRandom", getRandomVideos);
-router.put("/subscribeVideo", subscribe);
+router.get("/subscribeVideo/:id", verifyToken, subscribe);
+router.put("/view/:id", addView);
 export default router;

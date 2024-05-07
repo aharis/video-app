@@ -9,16 +9,13 @@ export const signup = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
-    // Provjera postoji li već korisnik s istim emailom
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(403).json({ message: "User already exists" });
     }
 
-    // Hashiranje lozinke
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Stvaranje novog korisnika
     const newUser = await User.create({
       ...req.body,
       password: hashedPassword,

@@ -10,6 +10,9 @@ const videoSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    description: {
+      type: String,
+    },
     imgUrl: {
       type: String,
       required: true,
@@ -32,7 +35,7 @@ const videoSchema = new mongoose.Schema(
     },
     dislikes: {
       type: [String],
-      default: 0,
+      default: [], 
     },
   },
   { timestamps: true }

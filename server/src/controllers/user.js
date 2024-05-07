@@ -39,10 +39,10 @@ const getUser = async (req, res, next) => {
 
 const updateUser = async (req, res, next) => {
   try {
-    const id = req.body._id; // Assuming userId is provided in the request body
+    const id = req.body._id;
     const userId = req.params.id;
     if (id !== userId)
-      return next(errorHandler(401, "You can edit only your profile!"));
+      return next(errorHandler(404, "You can edit only your profile!"));
     const updatedUser = await User.findByIdAndUpdate(id, req.body, {
       new: true,
     });
@@ -82,22 +82,18 @@ const subscribe = async (req, res, next) => {
   const targetUserId = req.params.id;
 
   try {
-    // Dodavanje korisnika u listu pretplaćenih korisnika
     await User.findByIdAndUpdate(userId, {
       $push: { subscribedUser: targetUserId },
     });
 
-    // Povećavanje broja pretplatnika ciljanog korisnika
     await User.findByIdAndUpdate(targetUserId, {
       $inc: { subscribe: 1 },
     });
 
-    // Uspješna pretplata
     return res
       .status(status.success)
       .json({ message: "Subscription Successful" });
   } catch (error) {
-    // Greška u pretplati
     return next(errorHandler(500, error.message));
   }
 };
@@ -107,22 +103,18 @@ const unSubscribe = async (req, res, next) => {
   const targetUserId = req.params.id;
 
   try {
-    // Dodavanje korisnika u listu pretplaćenih korisnika
     await User.findByIdAndUpdate(userId, {
       $pull: { subscribedUser: targetUserId },
     });
 
-    // Povećavanje broja pretplatnika ciljanog korisnika
     await User.findByIdAndUpdate(targetUserId, {
       $inc: { subscribe: -1 },
     });
 
-    // Uspješna pretplata
     return res
       .status(status.success)
       .json({ message: "Unsubscription Successful" });
   } catch (error) {
-    // Greška u pretplati
     return next(errorHandler(500, error.message));
   }
 };
